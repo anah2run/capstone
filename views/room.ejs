@@ -1,31 +1,136 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta http-equiv="X-UA-Compatible" content="ie=edge">
-  <script>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<script>
     const ROOM_ID = "<%= roomId %>"
-  </script>
-  <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
-  <script src="/socket.io/socket.io.js" defer></script>
-  <script src="script.js" defer></script>
-  <title>Document</title>
-  <style>
-    #video-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, 300px);
-      grid-auto-rows: 300px;
-    }
-    
-    video {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-  </style>
+	</script>
+	<script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
+	<script src="/socket.io/socket.io.js" defer></script>
+	<script src="script.js" defer></script>
+	<title>Document</title>
+	<style>
+		#video-grid {
+		  display: grid;
+		  grid-template-columns: repeat(auto-fill, 300px);
+		  grid-auto-rows: 300px;
+		}
+		
+		video {
+		  width: 100%;
+		  height: 100%;
+		  object-fit: cover;
+		}
+	</style>
 </head>
 <body>
-  <div id="video-grid"></div>
+	<div id="video-grid"></div>
+	
+	<br /><button id="link">초대링크</button>
+	
+	<p>
+	<a id="download">Download</a>
+    <button id="record">녹음</button>
+    <button id="stop">정지</button>
+    <div id="sound-clips"></div>
+	</p>
+	
+	
+    <script>
+		const record = document.getElementById("record")
+        const stop = document.getElementById("stop")
+        const soundClips = document.getElementById("sound-clips")
+		const downloadlink =  document.getElementById("download")
+
+		const link = document.getElementById("link")
+		
+		
+		if (navigator.mediaDevices) {
+			console.log('getUserMedia supported.');
+
+			var constraints = { 
+				audio: true 
+			};
+			var chunks = [];
+
+			navigator.mediaDevices.getUserMedia(constraints)
+				.then(function(stream) {
+
+					var mediaRecorder = new MediaRecorder(stream);
+
+
+					record.onclick = function() {
+						mediaRecorder.start();
+						console.log(mediaRecorder.state);
+						console.log("recorder started");
+						record.style.background = "red";
+						record.style.color = "black";
+					}
+
+					stop.onclick = function() {
+						mediaRecorder.stop();
+						console.log(mediaRecorder.state);
+						console.log("recorder stopped");
+						record.style.background = "";
+						record.style.color = "";
+					}
+
+
+					link.onclick = function() {
+						window.alert(location.href);
+					}
+
+
+					mediaRecorder.onstop = function(e) {
+						console.log("data available after MediaRecorder.stop() called.");
+
+						var clipName = prompt('Enter a name for your sound clip');
+
+						var clipContainer = document.createElement('article');
+						var clipLabel = document.createElement('p');
+						var audio = document.createElement('audio');
+						var deleteButton = document.createElement('button');
+
+						clipContainer.classList.add('clip');
+						audio.setAttribute('controls', '');
+						deleteButton.innerHTML = "Delete";
+						clipLabel.innerHTML = clipName;
+
+						clipContainer.appendChild(audio);
+						clipContainer.appendChild(clipLabel);
+						clipContainer.appendChild(deleteButton);
+						soundClips.appendChild(clipContainer);
+
+						audio.controls = true;
+						var blob = new Blob(chunks, {
+							'type' : 'audio/ogg; codecs=opus' 
+						});
+						chunks = [];
+						var audioURL = URL.createObjectURL(blob);
+						audio.src = audioURL;
+						
+						downloadlink.href = audioURL;
+						downloadlink.download = 'audiodata';
+						
+						console.log("recorder stopped");
+
+						deleteButton.onclick = function(e) {
+							evtTgt = e.target;
+							evtTgt.parentNode.parentNode.removeChild(evtTgt.parentNode);
+						}
+					}
+
+					mediaRecorder.ondataavailable = function(e) {
+						chunks.push(e.data);
+					}
+			})
+				.catch(function(err) {
+					console.log('The following error occurred: ' + err);
+				})
+		}
+			
+    </script>
 </body>
 </html>

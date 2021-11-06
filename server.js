@@ -23,6 +23,9 @@ io.on('connection', socket => {
     socket.to(roomId).broadcast.emit('user-connected', userId)
     if(!(roomId in room_host)) room_host[roomId] = userId
     console.log(room_host[roomId], userId)
+    socket.on('send-msg', (data) =>{
+      io.sockets.in(roomId).emit('receive-msg', data)
+    }) 
     socket.on('disconnect', () => {
       if(userId == room_host[roomId]){
         const download_link = "https://google.com"

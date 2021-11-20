@@ -18,9 +18,17 @@ function randomEmoji() {
 
 const emoji = randomEmoji();
 const userName = prompt("What's your name?");
+var userID = "";
 
-myPeer.on('open', id => {
-  socket.emit('join-room', ROOM_ID, id)
+myPeer.on('open', uid => {
+  const userData = {
+    uid,
+    userName,
+    emoji,
+  };
+  userID = uid;
+  socket.emit('join-room', ROOM_ID, userData)
+  insertNotificationToDOM(emoji + userName + " has join the room")
 })
 
 const myVideo = document.createElement('video')
@@ -45,24 +53,35 @@ myPeer.on('call', call => {
   })
 })
 
-  socket.on('user-connected', userId => {
+  socket.on('user-connected', userData => {
+    const userName = userData.userName
+    const userEmoji = userData.emoji
+    const userId = userData.uid
     setTimeout(() => {
       // user joined
       connectToNewUser(userId, stream)
+      console.log('user connected!:',userData)
+      insertNotificationToDOM(userEmoji + userName + " has joined the room")
       }, 1000)
     })
 
-  socket.on('user-disconnected', userId => {
-    console.log('user disconnected!:',userId)
+  socket.on('user-disconnected', userData => {
+    const userName = userData.userName
+    const userEmoji = userData.emoji
+    const userId = userData.uid
+    console.log('user disconnected!:',userData)
     setTimeout(() => {
-      if (peers[userId]) peers[userId].close()
+      if (peers[userId]) {
+        insertNotificationToDOM(userEmoji + userName + " has left the room")
+        peers[userId].close()
+      }
       }, 1000)
     })
 
   socket.on('receive-msg', data => {
     setTimeout(() => {
       console.log(data)
-      insertMessageToDOM(data, data.userName==userName)
+      insertMessageToDOM(data, false)
       }, 1000)
     })  
 
@@ -101,19 +120,46 @@ form.addEventListener('submit', () => {
   const value = input.value;
   input.value = '';
   const data = {
-    userName,
+    userID,
     content: value,
-    emoji,
   };
   socket.emit('send-msg', data)
+  insertMessageToDOM(data, true)
 });
 
+function insertNotificationToDOM(msg){
+  const template = document.querySelector('template[data-template="notification"]');
+  const msgEl = template.content.querySelector('.notification__message');
+  msgEl.innerText = msg;
+  const clone = document.importNode(template.content, true);
+  const messagesEl = document.querySelector('.messages');
+  messagesEl.appendChild(clone);
+  messagesEl.scrollTop = messagesEl.scrollHeight - messagesEl.clientHeight;
+}
+
+var lastTimestamp = ""
+function createTimestampText(ts){
+  return ('0'+ts.getHours()).slice(-2) + ':' + ('0'+ts.getMinutes()).slice(-2);
+}
 
 function insertMessageToDOM(options, isFromMe) {
   const template = document.querySelector('template[data-template="message"]');
   const nameEl = template.content.querySelector('.message__name');
-  if (options.emoji || options.userName) {
+  if(isFromMe){
+    nameEl.innerText = emoji + ' ' + userName;
+  }
+  else if (options.emoji || options.userName) {
     nameEl.innerText = options.emoji + ' ' + options.userName;
+  }
+  timestamp = createTimestampText(new Date());
+  const timestampEl = template.content.querySelector('.message__timestamp');
+  if (timestamp != lastTimestamp){
+    lastTimestamp = timestamp;
+    timestampEl.innerText = timestamp;
+    timestampEl.style.display = 'inline';
+  }
+  else{
+    timestampEl.style.display = 'none';
   }
   template.content.querySelector('.message__bubble').innerText = options.content;
   const clone = document.importNode(template.content, true);

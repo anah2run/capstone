@@ -4,7 +4,7 @@ const server = require('http').Server(app)
 const io = require('socket.io')(server)
 const { v4: uuidV4 } = require('uuid')
 
-const room_host = {}
+const room_info = {}
 
 app.set('view engine', 'ejs')
 app.use(express.static('public'))
@@ -18,22 +18,44 @@ app.get('/:room', (req, res) => {
 })
 
 io.on('connection', socket => {
-  socket.on('join-room', (roomId, userId) => {
+  socket.on('join-room', (roomId, userData) => {
     socket.join(roomId)
-    socket.to(roomId).broadcast.emit('user-connected', userId)
-    if(!(roomId in room_host)) room_host[roomId] = userId
-    console.log(room_host[roomId], userId)
-    socket.on('send-msg', (data) =>{
-      io.sockets.in(roomId).emit('receive-msg', data)
+    socket.to(roomId).broadcast.emit('user-connected', userData)
+    userID = socket.id
+    if(!(roomId in room_info)) {
+      const users = {}
+      users[userID] = userData
+      const info = {
+        host: userID,
+        users: users
+      };
+      room_info[roomId] = info
+    }
+    else{
+      room_info[roomId].users[userID] = userData
+      console.log(room_info[roomId] )
+    }
+    socket.on('send-msg', (msg) =>{
+      senderData = room_info[roomId].users[socket.id]
+      const data = {
+        emoji : senderData.emoji,
+        userName : senderData.userName,
+        content: msg.content,
+      };
+      socket.to(roomId).broadcast.emit('receive-msg', data)
     }) 
     socket.on('disconnect', () => {
-      if(userId == room_host[roomId]){
+      disconnectedID = socket.id
+      if(disconnectedID == room_info[roomId].host){
         const download_link = "https://google.com"
         socket.to(roomId).broadcast.emit('host-disconnected', download_link)
-        delete room_host[roomId]
+        delete room_info[roomId]
       }
       else{
-        socket.to(roomId).broadcast.emit('user-disconnected', userId)
+        userData=room_info[roomId].users[disconnectedID]
+        socket.to(roomId).broadcast.emit('user-disconnected',userData)
+        console.log(userData, room_info[disconnectedID])
+        delete room_info[roomId].users[disconnectedID]
       }
     })
   })

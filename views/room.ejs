@@ -14,18 +14,6 @@
 	<title>Document</title>
 </head>
 <body>
-	<div id="video_tab">
-		<div id="video-grid"></div>
-		
-		<br /><button id="link">초대링크</button>
-		
-		<p>
-		<a id="download">Download</a>
-		<button id="record">녹음</button>
-		<button id="stop">정지</button>
-		<div id="sound-clips"></div>
-		</p>
-	</div>
 	<div class="content">
 		<div class="messages">
 
@@ -35,11 +23,27 @@
 			<button type="submit">Send</button>
 		</form>
 	</div>
+	<div id="video-grid"></div>
+	
+	<br /><button id="link">초대링크</button>
+	
+	<p>
+	<a id="download">Download</a>
+	<button id="record">녹음</button>
+	<button id="stop">정지</button>
+	<div id="sound-clips"></div>
+	</p>
+	
 
 	<template data-template="message">
 		<div class="message">
+			<div class="message__timestamp"></div>
 			<div class="message__name"></div>
 			<div class="message__bubble"></div>
+		</div>
+	</template>
+	<template data-template="notification">
+		<div class="notification__message">
 		</div>
 	</template>
 	

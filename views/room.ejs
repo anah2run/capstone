@@ -14,7 +14,8 @@
 	<title>Document</title>
 </head>
 <body>
-	<div class="content">
+	<div class="content"id ="chat-box">
+		<a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
 		<div class="messages">
 
 		</div>
@@ -23,16 +24,17 @@
 			<button type="submit">Send</button>
 		</form>
 	</div>
-	<div id="video-grid"></div>
-	
-	<br /><button id="link">초대링크</button>
-	
-	<p>
-	<a id="download">Download</a>
-	<button id="record">녹음</button>
-	<button id="stop">정지</button>
-	<div id="sound-clips"></div>
-	</p>
+	<div id="main">
+		<div class="menu">
+			<button id="link">초대링크</button>
+			<button class="openbtn" onclick="openNav()">채팅창 열기</button>
+			<button id="download">다운로드</button>
+			<button id="record">녹음</button>
+			<button id="stop">정지</button>
+			<div id="sound-clips"></div>
+		</div>
+		<div id="video-grid"></div>
+	</div>
 	
 
 	<template data-template="message">

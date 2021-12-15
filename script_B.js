@@ -1,14 +1,3 @@
-
-function openNav() {
-  document.getElementById("chat-box").style.width = "400px";
-  document.getElementById("main").style.marginLeft = "400px";
-}
-
-function closeNav() {
-  document.getElementById("chat-box").style.width = "0";
-  document.getElementById("main").style.marginLeft= "0";
-}
-
 const socket = io('/')
 const videoGrid = document.getElementById('video-grid')
 const myPeer = new Peer(undefined, {
@@ -28,57 +17,56 @@ function randomEmoji() {
 }
 
 const emoji = randomEmoji();
-const myName = prompt("What's your name?");
+const userName = prompt("What's your name?");
 var userID = "";
 
 myPeer.on('open', uid => {
   const userData = {
     uid,
-    myName,
+    userName,
     emoji,
   };
   userID = uid;
   socket.emit('join-room', ROOM_ID, userData)
-  insertNotificationToDOM(emoji + myName + " has joined the room")
+  insertNotificationToDOM(emoji + userName + " has join the room")
 })
 
-const myVideo = document.createElement('div')
+const myVideo = document.createElement('video')
 myVideo.muted = true
 const peers = {}
 navigator.mediaDevices.getUserMedia({
   video: true,
   audio: true
 }).then(stream => {
-  addVideoStream(myVideo, stream, emoji+myName)
+  addVideoStream(myVideo, stream)
 
 myPeer.on('call', call => {
   call.answer(stream)
-  userData = call.metadata  
   console.log("peer:",call.peer)
   peers[call.peer] = call
-  const div = document.createElement('div')
+  const video = document.createElement('video')
   call.on('stream', remoteStream => {
-    addVideoStream(div, remoteStream,userData.userName)
+    addVideoStream(video, remoteStream)
   })
   call.on('close', () => {
-    div.remove()
+    video.remove()
   })
 })
 
   socket.on('user-connected', userData => {
-    const userName = userData.myName
+    const userName = userData.userName
     const userEmoji = userData.emoji
     const userId = userData.uid
     setTimeout(() => {
       // user joined
-      connectToNewUser(userData, stream)
+      connectToNewUser(userId, stream)
       console.log('user connected!:',userData)
       insertNotificationToDOM(userEmoji + userName + " has joined the room")
       }, 1000)
     })
 
   socket.on('user-disconnected', userData => {
-    const userName = userData.myName
+    const userName = userData.userName
     const userEmoji = userData.emoji
     const userId = userData.uid
     console.log('user disconnected!:',userData)
@@ -105,36 +93,25 @@ myPeer.on('call', call => {
 
 })
 
-function connectToNewUser(userData, stream) {
-  const userName = userData.myName
-  const userEmoji = userData.emoji
-  const userId = userData.uid
-  const call = myPeer.call(userId, stream, { metadata: { userName: emoji+myName } })
-  myPeer.sen
-  const div = document.createElement('div')
+function connectToNewUser(userId, stream) {
+  const call = myPeer.call(userId, stream)
+  const video = document.createElement('video')
   call.on('stream', remoteStream => {
-    addVideoStream(div, remoteStream, userEmoji+userName)
+    addVideoStream(video, remoteStream)
   })
   call.on('close', () => {
-    div.remove()
+    video.remove()
   })
   console.log("peer:",userId)
   peers[userId] = call
 }
 
-function addVideoStream(div, stream, name) {
-  div.innerText =""
-  div.id = "camera"
-  const video = document.createElement('video')
+function addVideoStream(video, stream) {
   video.srcObject = stream
   video.addEventListener('loadedmetadata', () => {
     video.play()
   })
-  div.appendChild(video)
-  const p = document.createElement('p')
-  p.innerText = String(name)
-  div.appendChild(p)
-  videoGrid.append(div)
+  videoGrid.append(video)
 }
 
 const form = document.querySelector('form');
@@ -169,10 +146,10 @@ function insertMessageToDOM(options, isFromMe) {
   const template = document.querySelector('template[data-template="message"]');
   const nameEl = template.content.querySelector('.message__name');
   if(isFromMe){
-    nameEl.innerText = emoji + ' ' + myName;
+    nameEl.innerText = emoji + ' ' + userName;
   }
-  else if (options.emoji || options.myName) {
-    nameEl.innerText = options.emoji + ' ' + options.myName;
+  else if (options.emoji || options.userName) {
+    nameEl.innerText = options.emoji + ' ' + options.userName;
   }
   timestamp = createTimestampText(new Date());
   const timestampEl = template.content.querySelector('.message__timestamp');

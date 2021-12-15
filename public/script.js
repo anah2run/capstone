@@ -34,7 +34,7 @@ var userID = "";
 myPeer.on('open', uid => {
   const userData = {
     uid,
-    myName,
+    userName : myName,
     emoji,
   };
   userID = uid;
@@ -66,7 +66,7 @@ myPeer.on('call', call => {
 })
 
   socket.on('user-connected', userData => {
-    const userName = userData.myName
+    const userName = userData.userName
     const userEmoji = userData.emoji
     const userId = userData.uid
     setTimeout(() => {
@@ -78,7 +78,7 @@ myPeer.on('call', call => {
     })
 
   socket.on('user-disconnected', userData => {
-    const userName = userData.myName
+    const userName = userData.userName
     const userEmoji = userData.emoji
     const userId = userData.uid
     console.log('user disconnected!:',userData)
@@ -106,7 +106,7 @@ myPeer.on('call', call => {
 })
 
 function connectToNewUser(userData, stream) {
-  const userName = userData.myName
+  const userName = userData.userName
   const userEmoji = userData.emoji
   const userId = userData.uid
   const call = myPeer.call(userId, stream, { metadata: { userName: emoji+myName } })
@@ -171,8 +171,8 @@ function insertMessageToDOM(options, isFromMe) {
   if(isFromMe){
     nameEl.innerText = emoji + ' ' + myName;
   }
-  else if (options.emoji || options.myName) {
-    nameEl.innerText = options.emoji + ' ' + options.myName;
+  else if (options.emoji || options.userName) {
+    nameEl.innerText = options.emoji + ' ' + options.userName;
   }
   timestamp = createTimestampText(new Date());
   const timestampEl = template.content.querySelector('.message__timestamp');
